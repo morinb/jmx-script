@@ -1,4 +1,4 @@
-# Created by https://www.gitignore.io/api/java,intellij
+# Created by https://www.gitignore.io/api/java,intellij,sbt
 
 ### Java ###
 *.class
@@ -62,3 +62,14 @@ atlassian-ide-plugin.xml
 com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
+
+### SBT ###
+# Simple Build Tool
+# http://www.scala-sbt.org/release/docs/Getting-Started/Directories.html#configuring-version-control
+
+target/
+lib_managed/
+src_managed/
+project/boot/
+.history
+.cache
