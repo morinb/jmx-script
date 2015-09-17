@@ -21,5 +21,18 @@ crossPaths := false
 // This forbids including Scala related libraries into the dependency
 autoScalaLibrary := false
 
+// Default main class to run : sbt run
+// the jar can be directly run with 'java -jar' command.
+mainClass in (Compile, run) := Some("com.bnpparibas.grp.jmx.script.JmxScript")
+
+// Dependencies
+val weblogic_full_client = "bea" % "wlfullclient" % "10.3.2"
+val commons_lang = "commons-lang" % "commons-lang" % "2.6"
+val commons_cli = "commons-cli" % "commons-cli" % "1.3.1"
+
 // library dependencies. (organization name) % (project name) % (version)
-libraryDependencies ++= Seq()
+libraryDependencies ++= Seq(
+  weblogic_full_client,
+  commons_lang,
+  commons_cli
+)
