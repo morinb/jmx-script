@@ -6,6 +6,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
@@ -23,7 +24,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -36,9 +39,12 @@ public class JmxScript {
    public static final int SERVER_INDEX = 2;
    public static final int PORT_INDEX = 3;
 
+   private static final String STRING_TYPE = String.class.getName();
+   private static final String[] WATCH_METHOD_PARAMS_TYPES = new String[]{STRING_TYPE, STRING_TYPE, STRING_TYPE};
+
    private static final int EXIT_OK = 0;
    private static final int EXIT_1_UNPARSEABLE_COMMAND_LINE = -1;
-   private static final int EXIT_2_NO_QUERY = -2;
+   private static final int EXIT_2_NO_RUNTIME = -2;
    private static final int EXIT_3_CREDENTIAL_FILE_PROBLEM = -3;
    private static final int EXIT_4_MISSING_PASSWORD = -4;
    private static final int EXIT_5_MISSING_SERVER = -5;
@@ -50,26 +56,65 @@ public class JmxScript {
    private static final int EXIT_11_MISSING_PASSWORD_IN_CREDENTIALS = -11;
    private static final int EXIT_12_MISSING_SERVER_IN_CREDENTIALS = -12;
    private static final int EXIT_13_MISSING_PORT_IN_CREDENTIALS = -13;
+
    private static final int EXIT_15_JMX_CONNECTION_FAILED = -15;
    private static final int EXIT_16_MALFORMED_OBJECT = -16;
    private static final int EXIT_17_ATTRIBUTE_NOT_FOUND = -17;
    private static final int EXIT_18_MBEAN_GETTER_EXCEPTION = -18;
    private static final int EXIT_19_MBEAN_SETTER_EXCEPTION = -19;
    private static final int EXIT_20_INSTANCE_NOT_FOUND = -20;
+   private static final int EXIT_21_UNABLE_TO_FIND_COMMAND = -21;
+
+
+   public static final String OPT_LOGIN_SHORT = "l";
+   public static final String OPT_LOGIN = "login";
+
+   public static final String OPT_PASSWORD_SHORT = "p";
+   public static final String OPT_PASSWORD = "password";
+
+   public static final String OPT_SERVER_SHORT = "s";
+   public static final String OPT_SERVER = "server";
+
+   public static final String OPT_PORT_SHORT = "o";
+   public static final String OPT_PORT = "port";
+
+   public static final String OPT_RUNTIME_SHORT = "r";
+   public static final String OPT_RUNTIME = "runtime";
+
+   public static final String OPT_ATTRIBUTE_SHORT = "a";
+   public static final String OPT_ATTRIBUTE = "attribute";
+
+   public static final String OPT_CREDENTIALS_SHORT = "d";
+   public static final String OPT_CREDENTIALS = "credentials";
+
+   public static final String OPT_HELP_SHORT = "h";
+   public static final String OPT_HELP = "help";
+
+   public static final String OPT_COMMAND_SHORT = "c";
+   public static final String OPT_COMMAND = "command";
+
+   public static final String OPT_LIST_COMMANDS_SHORT = "lc";
+   public static final String OPT_LIST_COMMANDS = "listcommands";
+
+   public static final String OPT_FORCE_SHORT = "f";
+   public static final String OPT_FORCE = "force";
 
 
    final Options options = new Options();
 
    JmxScript() {
 
-      options.addOption("l", "login", true, "the server access login. Defaults to weblogic");
-      options.addOption("p", "password", true, "the server access password");
-      options.addOption("s", "server", true, "the server address");
-      options.addOption("o", "port", true, "the server port to connect to. Defaults to 9080");
-      options.addOption("q", "query", true, "the query to ask to server");
-      options.addOption("a", "attribute", true, "the fetched attribute name");
-      options.addOption("c", "credentials", true, "the credentials file that contains the 'login', 'password', 'server'and 'port' for connection");
-      options.addOption("h", "help", false, "Print this help message");
+      options.addOption(OPT_LOGIN_SHORT, OPT_LOGIN, true, "the server access login. Defaults to weblogic");
+      options.addOption(OPT_PASSWORD_SHORT, OPT_PASSWORD, true, "the server access password");
+      options.addOption(OPT_SERVER_SHORT, OPT_SERVER, true, "the server address");
+      options.addOption(OPT_PORT_SHORT, OPT_PORT, true, "the server port to connect to. Defaults to 9080");
+      options.addOption(OPT_RUNTIME_SHORT, OPT_RUNTIME, true, "the runtime to query");
+      options.addOption(OPT_ATTRIBUTE_SHORT, OPT_ATTRIBUTE, true, "the fetched attribute name");
+      options.addOption(OPT_CREDENTIALS_SHORT, OPT_CREDENTIALS, true, "the credentials file that contains the 'login', 'password', 'server' and 'port' for connection");
+      options.addOption(OPT_HELP_SHORT, OPT_HELP, false, "Print this help message");
+      options.addOption(OPT_COMMAND_SHORT, OPT_COMMAND, true, "send a command to to weblogic. Like an evict cache or whatever.");
+      options.addOption(OPT_LIST_COMMANDS_SHORT, OPT_LIST_COMMANDS, false, "List available commands , and exits. (Needs a connection)");
+      options.addOption(OPT_FORCE_SHORT, OPT_FORCE, false, "force a cpu consuming jmx command to execute.");
 
    }
 
@@ -79,35 +124,47 @@ public class JmxScript {
 
       try {
          final CommandLine commandLine = parser.parse(options, args);
-         String query = null;
+
+         String runtime = null;
          String login = null;
          String password = null;
          String server = null;
          int port = -1;
          String attribute = null;
+         String command = null;
+         boolean listCommands = commandLine.hasOption(OPT_LIST_COMMANDS_SHORT);
+         boolean force = commandLine.hasOption(OPT_FORCE_SHORT);
 
-         if (commandLine.hasOption("h")) {
+         if (commandLine.hasOption(OPT_HELP_SHORT)) {
             printHelp();
             System.exit(EXIT_OK);
          }
-         if (commandLine.hasOption("q")) {
-            query = commandLine.getOptionValue("q");
-         } else {
-            System.err.println("\n/!\\ Please specify a query /!\\\n");
-            printHelp();
-            System.exit(EXIT_2_NO_QUERY);
+         if (commandLine.hasOption(OPT_COMMAND_SHORT)) {
+            command = commandLine.getOptionValue(OPT_COMMAND_SHORT);
          }
-         if (commandLine.hasOption("a")) {
-            attribute = commandLine.getOptionValue("a");
+         final boolean commandDefined = StringUtils.isNotBlank(command);
+         if (commandLine.hasOption(OPT_RUNTIME_SHORT)) {
+            runtime = commandLine.getOptionValue(OPT_RUNTIME_SHORT);
          } else {
-            System.err.println("\n/!\\ Please specify a query /!\\\n");
-            printHelp();
-            System.exit(EXIT_6_MISSING_ATTRIBUTE);
+            if (!listCommands && !commandDefined) {
+               System.err.println("\n/!\\ Please specify a runtime /!\\\n");
+               printHelp();
+               System.exit(EXIT_2_NO_RUNTIME);
+            }
+         }
+         if (commandLine.hasOption(OPT_ATTRIBUTE_SHORT)) {
+            attribute = commandLine.getOptionValue(OPT_ATTRIBUTE_SHORT);
+         } else {
+            if (!listCommands && !commandDefined) {
+               System.err.println("\n/!\\ Please specify a runtime /!\\\n");
+               printHelp();
+               System.exit(EXIT_6_MISSING_ATTRIBUTE);
+            }
          }
 
-         if (commandLine.hasOption("c")) {
+         if (commandLine.hasOption(OPT_CREDENTIALS_SHORT)) {
             try {
-               final String[] items = parseCredentialFile(commandLine.getOptionValue("c"));
+               final String[] items = parseCredentialFile(commandLine.getOptionValue(OPT_CREDENTIALS_SHORT));
 
                login = items[LOGIN_INDEX];
                password = items[PASSWORD_INDEX];
@@ -126,9 +183,9 @@ public class JmxScript {
          } else {
             // get l, p, s, p options
 
-            login = commandLine.getOptionValue("l", "weblogic");
+            login = commandLine.getOptionValue(OPT_LOGIN_SHORT, "weblogic");
 
-            final String portString = commandLine.getOptionValue("o", "9080");
+            final String portString = commandLine.getOptionValue(OPT_PORT_SHORT, "9080");
             try {
                port = Integer.parseInt(portString);
             } catch (NumberFormatException e) {
@@ -136,16 +193,16 @@ public class JmxScript {
                System.exit(EXIT_8_UNPARSEABLE_PORT);
             }
 
-            if (commandLine.hasOption("p")) {
-               password = commandLine.getOptionValue("p");
+            if (commandLine.hasOption(OPT_PASSWORD_SHORT)) {
+               password = commandLine.getOptionValue(OPT_PASSWORD_SHORT);
             } else {
                System.err.println("\n/!\\ Please specify a password /!\\\n");
 
                System.exit(EXIT_4_MISSING_PASSWORD);
             }
 
-            if (commandLine.hasOption("s")) {
-               server = commandLine.getOptionValue("s");
+            if (commandLine.hasOption(OPT_SERVER_SHORT)) {
+               server = commandLine.getOptionValue(OPT_SERVER_SHORT);
             } else {
                System.err.println("\n/!\\ Please specify a server address/!\\\n");
                System.exit(EXIT_5_MISSING_SERVER);
@@ -154,7 +211,7 @@ public class JmxScript {
          }
 
          // Here all needed variables must have a value.
-         assert query != null;
+         assert (runtime != null && !listCommands) || (runtime == null && listCommands);
          assert login != null;
          assert password != null;
          assert server != null;
@@ -174,8 +231,43 @@ public class JmxScript {
                final JMXConnector jmxConnector = JMXConnectorFactory.connect(serviceURL, context);
                MBeanServerConnection connection = jmxConnector.getMBeanServerConnection();
 
-               final Object value = connection.getAttribute(new ObjectName(query), attribute);
-               System.out.println(value);
+               final List<JmxPropertyObserverDesc> jmxProperties = getJmxProperties(connection);
+
+               if (listCommands) {
+                  for (JmxPropertyObserverDesc jmxProperty : jmxProperties) {
+                     System.out.printf("'%s'%s%n", jmxProperty, (StringUtils.isNotBlank(jmxProperty.argument) ? " (can have parameter)" : ""));
+                  }
+               } else if (commandDefined) {
+                  final JmxPropertyObserverDesc selectedCommand = find(command, jmxProperties);
+                  if (selectedCommand == null) {
+                     System.err.println("Unable to find command '" + command + "'");
+                     System.exit(EXIT_21_UNABLE_TO_FIND_COMMAND);
+                  }
+
+                  final String[] arguments = commandLine.getArgs();
+                  final String[] params = new String[3];
+
+                  params[0] = selectedCommand.className;
+                  params[1] = selectedCommand.fieldOrMethodName;
+                  try {
+                     params[2] = arguments[0];
+                  } catch (ArrayIndexOutOfBoundsException e) {
+                     // no parameter fallback
+                     params[2] = "";
+                  }
+
+                  final Object result = connection.invoke(
+                        //new ObjectName(String.format("com.bnpparibas.frmk.jmxmonitoring:Location=%s,name=PropertyObserver,type=PropertyObserver", instance))
+                        new ObjectName("com.bnpparibas.frmk.jmxmonitoring:name=PropertyObserver,type=PropertyObserver")
+                        , "watch"
+                        , params
+                        , WATCH_METHOD_PARAMS_TYPES);
+
+                  System.out.println(result);
+               } else {
+                  final Object value = connection.getAttribute(new ObjectName(runtime), attribute);
+                  System.out.println(value);
+               }
 
             } catch (IOException e) {
                System.err.println("Connection problem to the server : " + e.getLocalizedMessage());
@@ -184,7 +276,7 @@ public class JmxScript {
                System.err.println("Malformed jmx object name :" + e.getLocalizedMessage());
                System.exit(EXIT_16_MALFORMED_OBJECT);
             } catch (AttributeNotFoundException e) {
-               System.err.println("Attribute "+attribute+" not found : " + e.getLocalizedMessage());
+               System.err.println("Attribute " + attribute + " not found : " + e.getLocalizedMessage());
                System.exit(EXIT_17_ATTRIBUTE_NOT_FOUND);
             } catch (MBeanException e) {
                System.err.println("Mbean getter problem : " + e.getLocalizedMessage());
@@ -204,6 +296,28 @@ public class JmxScript {
          e.printStackTrace();
          System.exit(EXIT_1_UNPARSEABLE_COMMAND_LINE);
       }
+
+   }
+
+   private JmxPropertyObserverDesc find(String command, List<JmxPropertyObserverDesc> jmxProperties) {
+      for (JmxPropertyObserverDesc desc : jmxProperties) {
+         if (desc.label.equals(command)) {
+            return desc;
+         }
+      }
+      return null;
+   }
+
+   private List<JmxPropertyObserverDesc> getJmxProperties(MBeanServerConnection connection) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException, MalformedObjectNameException {
+      final String[] properties = (String[]) connection.invoke(new ObjectName("com.bnpparibas.frmk.jmxmonitoring:name=PropertyObserver,type=PropertyObserver"), "retrieveJmxProperties", null, null);
+      final List<JmxPropertyObserverDesc> results = new ArrayList<>();
+      for (String property : properties) {
+         if (!property.startsWith("#")) {
+            results.add(new JmxPropertyObserverDesc(property));
+         }
+      }
+
+      return results;
    }
 
    /**
@@ -248,7 +362,11 @@ public class JmxScript {
     * Print the help message to the console.
     */
    private void printHelp() {
-      new HelpFormatter().printHelp(120, usage(), "\nThis program allows to fetch jmx data from a weblogic server.\n", options, "\nThe credential file should respect the java properties file format, i.e.\n" +
+      new HelpFormatter().printHelp(120, usage(), "\nThis program allows to fetch jmx data from a weblogic server.\n",
+            options,
+            "\nThe couple attribute/runtime is exclusive with command/listcommands.\n" +
+                  "It means that if a command/listcommands is used, it will not execute the runtime even if defined.\n" +
+                  "\nThe credential file should respect the java properties file format, i.e.\n" +
                   "\ncredential.properties :\n\n" +
                   "login=mylogin\n" +
                   "password=my_super_S3c|_|R3_p4ssW0rd\n" +
@@ -256,18 +374,24 @@ public class JmxScript {
                   "port=9080\n" +
                   "\n" +
                   "Here is the list of possible error exit codes :\n" +
-                  exitCodes()
+                  exitCodes()+ "\n"+
+                  "\nHere are some example calls assuming credentials.properties connects to uir-m1 :\n" +
+                  "jmxScript -h\n" +
+                  "\njmxScript -d credentials.properties -a HeapFreeCurrent -r com.bea:ServerRuntime=acetp-uir-m1,Name=acetp-uir-m1,Type=JVMRuntime\n" +
+                  "\njmxScript -d credentials.properties -lc\n" +
+                  "\njmxScript -d credentials.properties -c \"Generate Thread Dump and Filter\" \"waitForNext\"\n"
       );
    }
 
    /**
     * Helper method that returns the list of exit codes.
+    *
     * @return
     */
    private String exitCodes() {
       return "  0 ) ok, everything went good.\n" +
             " -1 ) unparseable command line.\n" +
-            " -2 ) no query.\n" +
+            " -2 ) no runtime.\n" +
             " -3 ) credential file problem.\n" +
             " -4 ) missing password in command line.\n" +
             " -5 ) missing server in command line.\n" +
@@ -285,11 +409,13 @@ public class JmxScript {
             "-17 ) attribute not found\n" +
             "-18 ) mbean getter exception\n" +
             "-19 ) mbean setter exception\n" +
-            "-20 ) instance not found\n";
+            "-20 ) instance not found\n" +
+            "-21 ) unable to find command\n";
    }
 
    /**
     * Print usage command line part.
+    *
     * @return
     */
    private String usage() {
@@ -305,5 +431,36 @@ public class JmxScript {
 
    public static void main(String[] args) {
       new JmxScript().execute(args);
+   }
+
+   private static class JmxPropertyObserverDesc {
+
+      final String className;
+
+      final String fieldOrMethodName;
+
+      final String label;
+
+      final String argument;
+
+      final String possibleArguments;
+
+      final String warningMessage;
+
+      public JmxPropertyObserverDesc(String desc) {
+         String[] params = StringUtils.splitPreserveAllTokens(desc, ";");
+         this.className = desc == null || params.length == 0 ? null : params[0];
+         this.fieldOrMethodName = desc == null || params.length < 2 ? null : params[1];
+         this.label = desc == null || params.length < 3 ? null : params[2];
+         this.argument = desc == null || params.length < 4 ? null : StringUtils.stripToNull(params[3]);
+         this.possibleArguments = desc == null || params.length < 5 ? null : StringUtils.stripToNull(params[4]);
+         this.warningMessage = desc == null || params.length < 6 ? null : StringUtils.stripToNull(params[5]);
+      }
+
+      @Override
+      public String toString() {
+         return label;
+      }
+
    }
 }
