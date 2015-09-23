@@ -63,7 +63,7 @@ public class JmxScript {
    private static final int EXIT_18_MBEAN_GETTER_EXCEPTION = -18;
    private static final int EXIT_19_MBEAN_SETTER_EXCEPTION = -19;
    private static final int EXIT_20_INSTANCE_NOT_FOUND = -20;
-   private static final int EXIT_21_UNABLE_TON_FIND_COMMAND = -21;
+   private static final int EXIT_21_UNABLE_TO_FIND_COMMAND = -21;
 
 
    public static final String OPT_LOGIN_SHORT = "l";
@@ -241,7 +241,7 @@ public class JmxScript {
                   final JmxPropertyObserverDesc selectedCommand = find(command, jmxProperties);
                   if (selectedCommand == null) {
                      System.err.println("Unable to find command '" + command + "'");
-                     System.exit(EXIT_21_UNABLE_TON_FIND_COMMAND);
+                     System.exit(EXIT_21_UNABLE_TO_FIND_COMMAND);
                   }
 
                   final String[] arguments = commandLine.getArgs();
@@ -362,7 +362,11 @@ public class JmxScript {
     * Print the help message to the console.
     */
    private void printHelp() {
-      new HelpFormatter().printHelp(120, usage(), "\nThis program allows to fetch jmx data from a weblogic server.\n", options, "\nThe credential file should respect the java properties file format, i.e.\n" +
+      new HelpFormatter().printHelp(120, usage(), "\nThis program allows to fetch jmx data from a weblogic server.\n",
+            options,
+            "\nThe couple attribute/runtime is exclusive with command/listcommands.\n" +
+                  "It means that if a command/listcommands is used, it will not execute the runtime even if defined.\n" +
+                  "\nThe credential file should respect the java properties file format, i.e.\n" +
                   "\ncredential.properties :\n\n" +
                   "login=mylogin\n" +
                   "password=my_super_S3c|_|R3_p4ssW0rd\n" +
@@ -370,7 +374,12 @@ public class JmxScript {
                   "port=9080\n" +
                   "\n" +
                   "Here is the list of possible error exit codes :\n" +
-                  exitCodes()
+                  exitCodes()+ "\n"+
+                  "\nHere are some example calls assuming credentials.properties connects to uir-m1 :\n" +
+                  "jmxScript -h\n" +
+                  "\njmxScript -d credentials.properties -a HeapFreeCurrent -r com.bea:ServerRuntime=acetp-uir-m1,Name=acetp-uir-m1,Type=JVMRuntime\n" +
+                  "\njmxScript -d credentials.properties -lc\n" +
+                  "\njmxScript -d credentials.properties -c \"Generate Thread Dump and Filter\" \"waitForNext\"\n"
       );
    }
 
@@ -400,7 +409,8 @@ public class JmxScript {
             "-17 ) attribute not found\n" +
             "-18 ) mbean getter exception\n" +
             "-19 ) mbean setter exception\n" +
-            "-20 ) instance not found\n";
+            "-20 ) instance not found\n" +
+            "-21 ) unable to find command\n";
    }
 
    /**
