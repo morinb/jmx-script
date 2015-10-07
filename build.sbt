@@ -4,7 +4,7 @@ name := "jmx-script"
 // organization name (e.g., the package name of the project)
 organization := "com.bnpparibas.grp.jmx"
 
-version := "0.1.2"
+version := "0.1.3"
 
 // project description
 description := "JMX Java Console library for script use."
