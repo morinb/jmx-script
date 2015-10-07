@@ -43,27 +43,27 @@ public class JmxScript {
    private static final String[] WATCH_METHOD_PARAMS_TYPES = new String[]{STRING_TYPE, STRING_TYPE, STRING_TYPE};
 
    private static final int EXIT_OK = 0;
-   private static final int EXIT_1_UNPARSEABLE_COMMAND_LINE = -1;
-   private static final int EXIT_2_NO_RUNTIME = -2;
-   private static final int EXIT_3_CREDENTIAL_FILE_PROBLEM = -3;
-   private static final int EXIT_4_MISSING_PASSWORD = -4;
-   private static final int EXIT_5_MISSING_SERVER = -5;
-   private static final int EXIT_6_MISSING_ATTRIBUTE = -5;
-   private static final int EXIT_7_UNPARSEABLE_PORT_IN_CREDENTIALS = -7;
-   private static final int EXIT_8_UNPARSEABLE_PORT = -8;
-   private static final int EXIT_9_MALFORMED_JMX_URL = -9;
-   private static final int EXIT_10_MISSING_LOGIN_IN_CREDENTIALS = -10;
-   private static final int EXIT_11_MISSING_PASSWORD_IN_CREDENTIALS = -11;
-   private static final int EXIT_12_MISSING_SERVER_IN_CREDENTIALS = -12;
-   private static final int EXIT_13_MISSING_PORT_IN_CREDENTIALS = -13;
+   private static final int EXIT_1_UNPARSEABLE_COMMAND_LINE = 1;
+   private static final int EXIT_2_NO_RUNTIME = 2;
+   private static final int EXIT_3_CREDENTIAL_FILE_PROBLEM = 3;
+   private static final int EXIT_4_MISSING_PASSWORD = 4;
+   private static final int EXIT_5_MISSING_SERVER = 5;
+   private static final int EXIT_6_MISSING_ATTRIBUTE = 5;
+   private static final int EXIT_7_UNPARSEABLE_PORT_IN_CREDENTIALS = 7;
+   private static final int EXIT_8_UNPARSEABLE_PORT = 8;
+   private static final int EXIT_9_MALFORMED_JMX_URL = 9;
+   private static final int EXIT_10_MISSING_LOGIN_IN_CREDENTIALS = 10;
+   private static final int EXIT_11_MISSING_PASSWORD_IN_CREDENTIALS = 11;
+   private static final int EXIT_12_MISSING_SERVER_IN_CREDENTIALS = 12;
+   private static final int EXIT_13_MISSING_PORT_IN_CREDENTIALS = 13;
 
-   private static final int EXIT_15_JMX_CONNECTION_FAILED = -15;
-   private static final int EXIT_16_MALFORMED_OBJECT = -16;
-   private static final int EXIT_17_ATTRIBUTE_NOT_FOUND = -17;
-   private static final int EXIT_18_MBEAN_GETTER_EXCEPTION = -18;
-   private static final int EXIT_19_MBEAN_SETTER_EXCEPTION = -19;
-   private static final int EXIT_20_INSTANCE_NOT_FOUND = -20;
-   private static final int EXIT_21_UNABLE_TO_FIND_COMMAND = -21;
+   private static final int EXIT_15_JMX_CONNECTION_FAILED = 15;
+   private static final int EXIT_16_MALFORMED_OBJECT = 16;
+   private static final int EXIT_17_ATTRIBUTE_NOT_FOUND = 17;
+   private static final int EXIT_18_MBEAN_GETTER_EXCEPTION = 18;
+   private static final int EXIT_19_MBEAN_SETTER_EXCEPTION = 19;
+   private static final int EXIT_20_INSTANCE_NOT_FOUND = 20;
+   private static final int EXIT_21_UNABLE_TO_FIND_COMMAND = 21;
 
 
    public static final String OPT_LOGIN_SHORT = "l";
@@ -390,27 +390,27 @@ public class JmxScript {
     */
    private String exitCodes() {
       return "  0 ) ok, everything went good.\n" +
-            " -1 ) unparseable command line.\n" +
-            " -2 ) no runtime.\n" +
-            " -3 ) credential file problem.\n" +
-            " -4 ) missing password in command line.\n" +
-            " -5 ) missing server in command line.\n" +
-            " -6 ) missing attribute in command line.\n" +
-            " -7 ) unparseable port in credentials.\n" +
-            " -8 ) unparseable port in command line.\n" +
-            " -9 ) malformed jmx url.\n" +
-            "-10 ) missing login in credentials.\n" +
-            "-11 ) missing password in credentials.\n" +
-            "-12 ) missing server in credentials.\n" +
-            "-13 ) missing port in credentials.\n" +
-            "-14 ) [removed]\n" +
-            "-15 ) jmx connection to the server failed\n" +
-            "-16 ) malformed object\n" +
-            "-17 ) attribute not found\n" +
-            "-18 ) mbean getter exception\n" +
-            "-19 ) mbean setter exception\n" +
-            "-20 ) instance not found\n" +
-            "-21 ) unable to find command\n";
+            "  1 ) unparseable command line.\n" +
+            "  2 ) no runtime.\n" +
+            "  3 ) credential file problem.\n" +
+            "  4 ) missing password in command line.\n" +
+            "  5 ) missing server in command line.\n" +
+            "  6 ) missing attribute in command line.\n" +
+            "  7 ) unparseable port in credentials.\n" +
+            "  8 ) unparseable port in command line.\n" +
+            "  9 ) malformed jmx url.\n" +
+            " 10 ) missing login in credentials.\n" +
+            " 11 ) missing password in credentials.\n" +
+            " 12 ) missing server in credentials.\n" +
+            " 13 ) missing port in credentials.\n" +
+            " 14 ) [removed]\n" +
+            " 15 ) jmx connection to the server failed\n" +
+            " 16 ) malformed object\n" +
+            " 17 ) attribute not found\n" +
+            " 18 ) mbean getter exception\n" +
+            " 19 ) mbean setter exception\n" +
+            " 20 ) instance not found\n" +
+            " 21 ) unable to find command\n";
    }
 
    /**
