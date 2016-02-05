@@ -23,7 +23,95 @@ autoScalaLibrary := false
 
 // Default main class to run : sbt run
 // the jar can be directly run with 'java -jar' command.
-mainClass in (Compile, run) := Some("com.bnpparibas.grp.jmx.script.JmxScript")
+mainClass in (Compile, run) := Some("JmxScript")
+
+
+pomExtra := <build>
+  <pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.9</version>
+      </plugin>
+    </plugins>
+  </pluginManagement>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <executions>
+        <execution>
+          <phase>compile</phase>
+          <goals>
+            <goal>compile</goal>
+          </goals>
+        </execution>
+      </executions>
+      <configuration>
+        <source>1.7</source>
+        <target>1.7</target>
+      </configuration>
+    </plugin>
+    <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>build-helper-maven-plugin</artifactId>
+      <executions>
+        <execution>
+          <id>add-source</id>
+          <phase>generate-sources</phase>
+          <goals>
+            <goal>add-source</goal>
+          </goals>
+          <configuration>
+            <sources>
+              <source>src/main/scala</source>
+            </sources>
+          </configuration>
+        </execution>
+        <execution>
+          <id>add-test-source</id>
+          <phase>generate-sources</phase>
+          <goals>
+            <goal>add-test-source</goal>
+          </goals>
+          <configuration>
+            <sources>
+              <source>src/test/scala</source>
+            </sources>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-shade-plugin</artifactId>
+      <version>2.3</version>
+      <executions>
+        <!-- Run shade goal on package phase -->
+        <execution>
+          <phase>package</phase>
+          <goals>
+            <goal>shade</goal>
+          </goals>
+          <configuration>
+            <transformers>
+              <!-- add Main-Class to manifest file -->
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <mainClass>com.bnpparibas.grp.jmx.script.JmxScript</mainClass>
+              </transformer>
+            </transformers>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
 
 // Dependencies
 val weblogic_full_client = "bea" % "wlfullclient" % "10.3.2"

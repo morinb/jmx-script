@@ -1,4 +1,4 @@
-package com.bnpparibas.grp.jmx.script;
+package com.github.morinb.jmx.script;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
