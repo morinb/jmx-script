@@ -54,8 +54,8 @@ pomExtra := <build>
         </execution>
       </executions>
       <configuration>
-        <source>1.7</source>
-        <target>1.7</target>
+        <source>1.6</source>
+        <target>1.6</target>
       </configuration>
     </plugin>
     <plugin>

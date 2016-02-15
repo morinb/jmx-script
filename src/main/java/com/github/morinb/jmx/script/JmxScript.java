@@ -310,7 +310,7 @@ public class JmxScript {
 
    private List<JmxPropertyObserverDesc> getJmxProperties(MBeanServerConnection connection) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException, MalformedObjectNameException {
       final String[] properties = (String[]) connection.invoke(new ObjectName("com.bnpparibas.frmk.jmxmonitoring:name=PropertyObserver,type=PropertyObserver"), "retrieveJmxProperties", null, null);
-      final List<JmxPropertyObserverDesc> results = new ArrayList<>();
+      final List<JmxPropertyObserverDesc> results = new ArrayList<JmxPropertyObserverDesc>();
       for (String property : properties) {
          if (!property.startsWith("#")) {
             results.add(new JmxPropertyObserverDesc(property));
